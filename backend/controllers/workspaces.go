@@ -9,11 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Workspace struct {
-	Title       string `json:"title" binding:"required"`
-	Description string `json:"description" binding:"required"`
-}
-
 func GetAllWorkspaces(c *gin.Context) {
 	Db := db.GetDB().Db
 	user := c.MustGet("user")
@@ -36,7 +31,7 @@ func GetAllWorkspaces(c *gin.Context) {
 }
 
 func AddWorkspace(c *gin.Context) {
-	var workspace Workspace
+	var workspace db.Workspace
 	if err := c.ShouldBindJSON(&workspace); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 	}
@@ -50,8 +45,10 @@ func AddWorkspace(c *gin.Context) {
 	newId, err := result.LastInsertId()
 	utils.HandleError(err)
 	newWorkspace := db.WorkspaceStruct{
-		Title:       workspace.Title,
-		Description: workspace.Description,
+		Workspace: db.Workspace{
+			Title:       workspace.Title,
+			Description: workspace.Description,
+		},
 		WorkspaceId: int32(newId),
 		User:        int32(user.(int)),
 	}

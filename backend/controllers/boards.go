@@ -9,11 +9,6 @@ import (
 	"techsoc-scrumboard-backend/utils"
 )
 
-type Board struct {
-	Title       string `json:"title" binding:"required"`
-	Description string `json:"description" binding:"required"`
-}
-
 func GetAllBoards(c *gin.Context) {
 	Db := db.GetDB().Db
 	id, err := strconv.Atoi(c.Param("id"))
@@ -37,7 +32,7 @@ func GetAllBoards(c *gin.Context) {
 }
 
 func AddBoard(c *gin.Context) {
-	var board Board
+	var board db.Board
 	if err := c.ShouldBindJSON(&board); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 	}
@@ -51,10 +46,12 @@ func AddBoard(c *gin.Context) {
 	newId, err := result.LastInsertId()
 	utils.HandleError(err)
 	newBoard := db.BoardStruct{
-		Title:       board.Title,
-		Description: board.Description,
-		BoardId:     int32(newId),
-		Workspace:   int32(id),
+		Board: db.Board{
+			Title:       board.Title,
+			Description: board.Description,
+		},
+		BoardId:   int32(newId),
+		Workspace: int32(id),
 	}
 	utils.HandleError(err)
 	c.JSON(http.StatusAccepted, newBoard)

@@ -9,29 +9,12 @@ import (
 	"techsoc-scrumboard-backend/utils"
 )
 
-type Card struct {
-	Title       string `json:"title" binding:"required"`
-	Description string `json:"description" binding:"required"`
-	Status      string `json:"status" binding:"required"`
-}
-
 func GetAllCards(c *gin.Context) {
 	Db := db.GetDB().Db
 	id, err := strconv.Atoi(c.Param("id"))
 	utils.HandleError(err)
 	rows, err := Db.Query(fmt.Sprintf("SELECT * FROM cards WHERE board = %d", id))
 	utils.HandleError(err)
-
-	// rowsBoard, err := Db.Query(fmt.Sprintf("SELECT title FROM boards WHERE boardId = %d", id))
-	// utils.HandleError(err)
-
-	// var title string
-	// for rowsBoard.Next() {
-	// 	err = rows.Scan(&title)
-	// 	if err != nil {
-	// 		utils.HandleError(err)
-	// 	}
-	// }
 
 	cardArray := make([]db.CardStruct, 0, 10)
 	for rows.Next() {
@@ -49,7 +32,7 @@ func GetAllCards(c *gin.Context) {
 }
 
 func AddCard(c *gin.Context) {
-	var card Card
+	var card db.Card
 	if err := c.ShouldBindJSON(&card); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 	}
@@ -66,11 +49,13 @@ func AddCard(c *gin.Context) {
 	newId, err := result.LastInsertId()
 	utils.HandleError(err)
 	newCard := db.CardStruct{
-		Title:       card.Title,
-		Description: card.Description,
-		Status:      card.Status,
-		CardId:      int32(newId),
-		Board:       int32(id),
+		Card: db.Card{
+			Title:       card.Title,
+			Description: card.Description,
+			Status:      card.Status,
+		},
+		CardId: int32(newId),
+		Board:  int32(id),
 	}
 	utils.HandleError(err)
 	c.JSON(http.StatusAccepted, newCard)
